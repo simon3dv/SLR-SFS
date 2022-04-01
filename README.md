@@ -6,7 +6,7 @@ Code release for the paper **Simulating Fluids in Real-World Still Images**
 
 **Authors**: [Siming Fan](https://simon3dv.github.io/), [Jingtan Piao](#), [Kwan-Yee Lin](https://kwanyeelin.github.io/), [Chen Qian](https://scholar.google.com/citations?user=AerkT0YAAAAJ&hl=en), [Hongsheng Li](http://www.ee.cuhk.edu.hk/~hsli/).
 
-[[Paper](#)] [[Project Page](https://simon3dv/SLR-SFS.github.io)]
+[[Paper](#)] [[Project Page](https://slr-sfs.github.io/)]
 
 
 https://user-images.githubusercontent.com/56864061/161210185-d139d7da-edd1-4370-89ab-e4f5508572b4.mp4
