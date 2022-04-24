@@ -8,13 +8,13 @@ Code release for the paper **Simulating Fluids in Real-World Still Images**
 
 [[Paper](#)] [[Project Page](https://SimulatingFluids.github.io/)]
 
-##### Our SLR sample (Still Input Image | Animated Video):
+##### Our SLR sample (Still Input Image | Animated Video(480x256)):
 <center class="half">
      <img src="https://user-images.githubusercontent.com/56864061/164973194-1d1d508b-af35-4802-aa18-bd0ad49af768.png" width="720"/><img src="https://user-images.githubusercontent.com/56864061/163476834-4fb912ec-4afc-4bb4-911c-97744cdb6ea6.gif" width="720"/>
 </center>
 
 <!--![SLR_input](https://user-images.githubusercontent.com/56864061/164972138-d466d728-8d9e-4f7f-85ed-0dba9e4650a3.jpg) ![SLR_sample](https://user-images.githubusercontent.com/56864061/163476834-4fb912ec-4afc-4bb4-911c-97744cdb6ea6.gif)--> 
-##### Our SFS sample (Still Input Image | Animated Video):
+##### Our SFS sample (Still Input Image | Animated Video(480x256)):
 <center class="half">
      <img src="https://user-images.githubusercontent.com/56864061/164973201-a27f2cc6-6598-4a55-9f2f-d0b0379ef386.png" width="720"/><img src="https://user-images.githubusercontent.com/56864061/163478052-97f47118-8c73-423c-bede-4b014e99ea67.gif" width="720"/>
 </center>
