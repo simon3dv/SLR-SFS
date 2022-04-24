@@ -8,13 +8,13 @@ Code release for the paper **Simulating Fluids in Real-World Still Images**
 
 [[Paper](#)] [[Project Page](https://SimulatingFluids.github.io/)]
 
-##### Our SLR sample:
+##### Our SLR sample (Still Input Image | Animated Video):
 
-![SLR_sample](https://user-images.githubusercontent.com/56864061/163476834-4fb912ec-4afc-4bb4-911c-97744cdb6ea6.gif) 
+![SLR_input](https://user-images.githubusercontent.com/56864061/164972138-d466d728-8d9e-4f7f-85ed-0dba9e4650a3.jpg) ![SLR_sample](https://user-images.githubusercontent.com/56864061/163476834-4fb912ec-4afc-4bb4-911c-97744cdb6ea6.gif) 
 
-##### Our SFS sample:
+##### Our SFS sample (Still Input Image | Animated Video):
 
-![SFS_sample](https://user-images.githubusercontent.com/56864061/163478052-97f47118-8c73-423c-bede-4b014e99ea67.gif)
+![SLR_input](https://user-images.githubusercontent.com/56864061/164972151-05a21722-5634-4d2f-a8b7-b6dc297f6bf7.jpg) ![SFS_sample](https://user-images.githubusercontent.com/56864061/163478052-97f47118-8c73-423c-bede-4b014e99ea67.gif)
 
 ## Introduction
 In this work, we tackle the problem of real-world fluid animation from a still image.  We propose a new and learnable representation, **surface-based layered representation(SLR)**, which decomposes the fluid and the static objects in the scene, to better synthesize the animated videos from a single fluid image. and design a **surface-only fluid simulation(SFS)** to model the evolution of the image fluids with better visual effects.
@@ -132,6 +132,7 @@ bash train_alpha_finetuneBG_finetuneFluid_v1.sh
 - [x] pretrained model and code of our reproduced Holynski's method(w/o motion estimation)
 - [x] pretrained model and code of SLR and pretrained model
 - [ ] code of SFS
+- [ ] CLAWv2 testset
 - [ ] pretrained model and code of motion estimation from single image
 
 
