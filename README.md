@@ -6,7 +6,7 @@ Code release for the paper **Simulating Fluids in Real-World Still Images**
 
 **Authors**: [Siming Fan](https://simon3dv.github.io/), [Jingtan Piao](#), [Chen Qian](https://scholar.google.com/citations?user=AerkT0YAAAAJ&hl=en), [Kwan-Yee Lin](https://kwanyeelin.github.io/), [Hongsheng Li](http://www.ee.cuhk.edu.hk/~hsli/).
 
-[[Paper](http://arxiv.org/abs/2204.11335)] [[Project Page](https://SimulatingFluids.github.io/)][Demo Video](https://www.youtube.com/watch?v=Aatrl16t-V8)
+[[Paper](http://arxiv.org/abs/2204.11335)] [[Project Page](https://SimulatingFluids.github.io/)] [[Demo Video](https://www.youtube.com/watch?v=Aatrl16t-V8)]
 
 ##### Our SLR sample (Still Input Image | Animated Video(480x256)):
 <center class="half">
