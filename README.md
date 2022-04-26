@@ -147,7 +147,7 @@ If you find this work useful in your research, please consider cite:
   author    = {Siming Fan, Jingtan Piao, Chen Qian, Kwan-Yee Lin, Hongsheng Li},
   title     = {Simulating Fluids in Real-World Still Images},
   journal   = {arXiv preprint},
-  volume    = {http://arxiv.org/abs/2204.11335},
+  volume    = {arXiv:2204.11335},
   year      = {2022},
 }
 ```
