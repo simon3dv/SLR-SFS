@@ -81,20 +81,20 @@ pip install av tensorboardX tensorboard # for training
 ## Inference
 Download our pretrained model mentioned in Table 1,2 of the paper:
 
-[baseline2](https://drive.google.com/file/d/1eWLh23IkSRtmA1lyZGjivqC97DK3wDEu/view?usp=sharing) (Modified Holynski(Baseline)): 100epochs + (lower learning rate)50epochs
-
-[Ours_stage_1](https://drive.google.com/file/d/1WyPZ2GHera0RIl5MTa5lHyh21oK-IlG1/view?usp=sharing) (Ours(Stage 1)): 100epochs
-
-[Ours_stage_2](https://drive.google.com/file/d/1Blu-G-zERrcpk3J3sGWuawhcK8dLFG1x/view?usp=sharing) (Background Only, used in Ours(Stage 2)): 100epochs
-
-[Ours_v1](https://drive.google.com/file/d/1WzqWB-a85hZDhdos2CWezqT95IjJXzVN/view?usp=sharing) (Ours): 100epochs baseline2 + 100epochs BG + (lower learning rate)50 epochs Ours
+| Model | LPIPS of CLAW(All;Fluid) | Description |
+| --------- |:----------:|  :-----: |
+| [baseline2](https://drive.google.com/file/d/1eWLh23IkSRtmA1lyZGjivqC97DK3wDEu/view?usp=sharing) | 0.2078;0.2041 | to be released |
+| [Ours_stage_1](https://drive.google.com/file/d/1WyPZ2GHera0RIl5MTa5lHyh21oK-IlG1/view?usp=sharing) | 0.2143;0.2100 | (Ours(Stage 1)): 100epochs
+| [Ours_stage_2](https://drive.google.com/file/d/1Blu-G-zERrcpk3J3sGWuawhcK8dLFG1x/view?usp=sharing) | 0.2411;0.2294 | (Background Only, used in Ours(Stage 2)): 100epochs, and used as background initialization of the stage 3 training of Ours_v1 |
+| [Ours_v1](https://drive.google.com/file/d/1WzqWB-a85hZDhdos2CWezqT95IjJXzVN/view?usp=sharing) | 0.2040;0.1975  | (Ours): 100epochs baseline2(stage 1) + 100epochs BG(stage 2) + (lower learning rate)50 epochs Ours(stage 3) |
+| [Ours_v1_ProjectPage](https://drive.google.com/file/d/1zmnoAkn3hphhY8hQr4xvs43juD_7M0Ow/view?usp=sharing) | 0.2060;0.1992 |  Selected with the best TotalLoss(FluidPerctual,BGPerctual, MaskLoss mainly) of eulerian_data validation set, while the previous models are selected with the best Fluid Perceptual Loss. This pretrained model can be used to reproduce the results in our Project Page. Decomposition results is a little better than "Ours_v1" |
 
 1.For evaluation under gt motion:
 ```Ours CLAW testset
-# For our v1 model, 60 frames, gt motion(Table 1 in the paper)
+# For our v1 model, 60 frames, gt motion(Table 1,2 in the paper)
 bash test_animating/CLAW/test_v1.sh
 bash evaluation/eval_animating_CLAW.sh
-# For baseline2 model, 60 frames, gt motion(Table 1 in the paper)
+# For baseline2 model, 60 frames, gt motion(Table 1,2 in the paper)
 bash test_animating/CLAW/test_baseline2.sh
 bash evaluation/eval_animating_CLAW.sh
 ## You can also use sbatch script test_animating/test_sbatch_2.sh
@@ -134,7 +134,7 @@ bash train_alpha_finetuneBG_finetuneFluid_v1.sh
 
 ## ToDo list
 - [x] pretrained model and code of our reproduced Holynski's method(w/o motion estimation)
-- [x] pretrained model and code of SLR and pretrained model
+- [x] pretrained model and code of SLR
 - [ ] code of SFS
 - [ ] CLAWv2 testset
 - [ ] pretrained model and code of motion estimation from single image
