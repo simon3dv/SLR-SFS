@@ -835,7 +835,7 @@ class AnimatingSoftmaxSplatingJoint(nn.Module):
 
 		return mask.reshape((1,) + (1,) + mask.shape).astype(np.float32)
 
-	def forward_flow(self, batch,vis_time=False):
+	def forward_flow(self, batch,vis_time=False, use_input_image=False):
 		# Input values
 		ngf = self.opt.ngf
 		start_img = batch["images"][0]
@@ -1081,7 +1081,11 @@ class AnimatingSoftmaxSplatingJoint(nn.Module):
 
 
 		CompositeFluidAlpha = gen_fluid_alpha / alpha_norm
-
+		if use_input_image:
+			flow_speed = (flow[:, 0:1, ...] ** 2 + flow[:, 1:2, ...] ** 2).sqrt().view(bs, 1, flow.shape[2],
+			                                                                           flow.shape[3])
+			static_mask = (flow_speed < flow.mean() * 0.1).float()
+			gen_img = start_img * static_mask + gen_img * (1.0 - static_mask)
 		pred_dict = {"PredImg": gen_img,
 		             "BGImg": gen_bg_img_f,
 		             "FluidImg": gen_fluid_img,
