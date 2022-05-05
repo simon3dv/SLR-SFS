@@ -25,6 +25,17 @@ In this work, we tackle the problem of real-world fluid animation from a still i
 
 For more details of SLR-SFS, please refer to our paper and project page.
 
+## News
+ - [04/05/2022] Colab updated. Huggingface will be updated soon. Code, GUI of Motion Regressor from single image and our SFS will be released in the end of May. 
+ - [26/04/2022] Technical report, code, CLAW testset released. 
+ - [01/04/2022] Project page is created.
+
+## Web Demo 
+
+<a href="https://colab.research.google.com/drive/1yY2GrnOI0-wrNf2krxf5d8yqBfLR3Go5"><img src="https://colab.research.google.com/assets/colab-badge.svg" height=22.5></a>
+We prepare a Colab demo to allow you to synthesize videos under gt motion, as well as editing effects. Motion regressor from single image is not supported in this version for the time being and will be updated soon.
+
+
 ## Data preparetion
 #### For evaluation:
 
@@ -135,9 +146,9 @@ bash train_alpha_finetuneBG_finetuneFluid_v1.sh
 ## ToDo list
 - [x] pretrained model and code of our reproduced Holynski's method(w/o motion estimation)
 - [x] pretrained model and code of SLR
-- [ ] code of SFS
-- [ ] CLAWv2 testset
-- [ ] pretrained model and code of motion estimation from single image
+- [ ] CLAWv2 testset(May)
+- [ ] pretrained model and code of motion estimation from single image(May)
+- [ ] code of SFS(May)
 
 
 ## Citation
