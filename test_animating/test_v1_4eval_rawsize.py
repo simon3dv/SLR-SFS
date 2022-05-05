@@ -296,10 +296,10 @@ if __name__=='__main__':
             pass
 
         elif "PredImg" in key or "CompositeFluidAlpha" in key:
-            os.system('ffmpeg -loglevel quiet -framerate 30 -i %s/%s/%%06d.png -framerate 30 %s_%s_%s.gif -y'%(save_dir, key, key, name,opts.model_type))
+            os.system('ffmpeg -loglevel quiet -framerate 30 -i %s/%s/%%06d.png -framerate 30 %s_%s_%s.mp4 -y'%(save_dir, key, key, name,opts.model_type))
             #if key == "CompositeFluidAlpha":
             #    os.system('rm -rf %s/%s'%(save_dir,key))
         if "RefinedAlpha" in key or "WarpedAlpha" in key:
-            os.system('ffmpeg -loglevel quiet -framerate 30 -i %s/%s/%%06d.png -framerate 30 %s/%s_%s_%s.gif -y' % (
+            os.system('ffmpeg -loglevel quiet -framerate 30 -i %s/%s/%%06d.png -framerate 30 %s/%s_%s_%s.mp4 -y' % (
             save_dir, key, save_dir, key, name, opts.model_type))
             #os.system('rm -rf %s/%s' % (save_dir, key))

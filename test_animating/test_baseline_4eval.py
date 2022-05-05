@@ -252,7 +252,7 @@ if __name__=='__main__':
             continue
         if os.path.exists(os.path.join(save_dir,key)):
             #os.system('convert -delay 3.33 %s/%s/*.png %s/%s_%s_%s.gif'%(save_dir, key, save_dir,key, name,opts.model_type))
-            os.system('ffmpeg -loglevel quiet -framerate 30 -i %s/%s/%%06d.png -framerate 30 %s/%s_%s_%s.gif -y'%(save_dir, key, save_dir,key, name,opts.model_type))
+            os.system('ffmpeg -loglevel quiet -framerate 30 -i %s/%s/%%06d.png -framerate 30 %s/%s_%s_%s.mp4 -y'%(save_dir, key, save_dir,key, name,opts.model_type))
             #if key != "PredImg" and key!="CompositeFluidAlpha":
             #    os.system('rm -rf %s/%s'%(save_dir,key))
             #os.system('rm -rf %s/%s' % (save_dir, key))
