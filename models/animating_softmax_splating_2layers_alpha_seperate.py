@@ -1083,8 +1083,8 @@ class AnimatingSoftmaxSplatingJoint(nn.Module):
 		CompositeFluidAlpha = gen_fluid_alpha / alpha_norm
 
 		pred_dict = {"PredImg": gen_img,
-		             #"BGImg": gen_bg_img_f,
-		             #"FluidImg": gen_fluid_img,
+		             "BGImg": gen_bg_img_f,
+		             "FluidImg": gen_fluid_img,
 		             #"FluidAlpha_f": nn.Sigmoid()(alpha_fluid_f),
 		             "CompositeFluidAlpha": CompositeFluidAlpha,
 		             #"BGAlpha_f": alpha_bg_f,
