@@ -6,7 +6,7 @@ Code release for the paper **Simulating Fluids in Real-World Still Images**
 
 **Authors**: [Siming Fan](https://simon3dv.github.io/), [Jingtan Piao](#), [Chen Qian](https://scholar.google.com/citations?user=AerkT0YAAAAJ&hl=en), [Kwan-Yee Lin](https://kwanyeelin.github.io/), [Hongsheng Li](http://www.ee.cuhk.edu.hk/~hsli/).
 
-[[Paper](http://arxiv.org/abs/2204.11335)] [[Project Page](https://SimulatingFluids.github.io/)] [[Demo Video](https://www.youtube.com/watch?v=Aatrl16t-V8)]
+[[Paper](http://arxiv.org/abs/2204.11335)] [[Project Page](https://slr-sfs.github.io/)] [[Demo Video](https://www.youtube.com/watch?v=Aatrl16t-V8)]
 
 ##### Our SLR sample (Still Input Image | Animated Video(480x256)):
 <center class="half">
@@ -26,7 +26,7 @@ In this work, we tackle the problem of real-world fluid animation from a still i
 For more details of SLR-SFS, please refer to our paper and project page.
 
 ## News
- - [04/05/2022] Colab updated. Huggingface will be updated soon. Code, GUI of Motion Regressor from single image and our SFS will be released in the end of May. 
+ - [04/05/2022] Colab updated. Huggingface will be updated soon. Code, GUI of Motion Regressor from single image and our SFS will be released.
  - [26/04/2022] Technical report, code, CLAW testset released. 
  - [01/04/2022] Project page is created.
 
@@ -146,9 +146,9 @@ bash train_alpha_finetuneBG_finetuneFluid_v1.sh
 ## ToDo list
 - [x] pretrained model and code of our reproduced Holynski's method(w/o motion estimation)
 - [x] pretrained model and code of SLR
-- [ ] CLAWv2 testset(May)
-- [ ] pretrained model and code of motion estimation from single image(May)
-- [ ] code of SFS(May)
+- [ ] CLAWv2 testset(Early June)
+- [ ] pretrained model and code of motion estimation from single image(Early June)
+- [ ] code of SFS(Late June)
 
 
 ## Citation
