@@ -598,7 +598,12 @@ class AnimatingSoftmaxSplatingJoint(nn.Module):
 		gen_fluid_img = nn.Tanh()(gen_fluid_img)
 
 		# Fluid Alpha Decoder
-		gen_fluid_alpha = self.net_alpha_decoder(torch.cat([gen_fs, alpha_fluid],1))
+		if "decouple" in self.opt.alpha_refine_model_type:
+			gen_fluid_alpha = self.net_alpha_decoder(alpha_fluid)
+		elif "image" in self.opt.alpha_refine_model_type:
+			gen_fluid_alpha = self.net_alpha_decoder(torch.cat([start_img, alpha_fluid],1))
+		else:
+			gen_fluid_alpha = self.net_alpha_decoder(torch.cat([gen_fs, alpha_fluid],1))
 		gen_fluid_alpha_raw = gen_fluid_alpha.clone()
 		gen_fluid_alpha = nn.Sigmoid()(gen_fluid_alpha)
 		"""

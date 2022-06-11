@@ -12,13 +12,13 @@ import time
 import sys
 import random
 import torch.nn.functional as F
-from PIL import Image, ImageDraw
-import json
-from utils.utils import VideoReader, load_compressed_tensor, read_flo, get_params
 from sklearn.cluster import KMeans
+import torchvision
 PATH = os.getcwd()
 sys.path.append(os.path.join(PATH))
-
+from utils.utils import read_flo, load_compressed_tensor, get_params, get_transform
+from torchvision.transforms import InterpolationMode
+from utils.flow_utils import flow2img, writeFlow
 
 class Liquid(data.Dataset):
     """
@@ -28,6 +28,7 @@ class Liquid(data.Dataset):
         self, dataset, opts=None, num_views=3, seed=0, vectorize=False
     ):
         # Now go through the dataset
+        # Raw Image Size
         self.opt=opts
         self.W = 1280
         self.H = 720
@@ -46,7 +47,7 @@ class Liquid(data.Dataset):
 
         self.input_transform = Compose(
             [
-                Resize((opts.W, opts.W),Image.BICUBIC),
+                Resize((opts.motionH, opts.motionW),InterpolationMode.BICUBIC),
                 ToTensor(),
                 Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5)),
             ]
@@ -56,54 +57,33 @@ class Liquid(data.Dataset):
         self.isval = False
         self.opt = opts
 
+
     def __len__(self):
         return max(2**15,len(self.imageset))
 
     def __getitem__(self, index):
-        crop_size = 720
-        params = get_params(self.opt, size=(self.W, self.H),
-                            crop_size=crop_size)
         index = self.rng.randint(self.imageset.shape[0])
         id = self.imageset[index]
 
         rgbs = []
         flows = []
-        video_file = os.path.join(self.opt.train_data_path[0], self.dataset, id+"_gt.mp4")
-        video_reader = VideoReader(video_file, None, "mp4")
-        N = len(video_reader)
-        start_index = self.rng.randint(0,N//3)
-        end_index = self.rng.randint(N//3*2,N)
-        middle_index = self.rng.randint(start_index, end_index)
+        img_path = os.path.join(self.opt.train_data_path[0], self.dataset, id + "_input.jpg")
+        image = Image.open(img_path)
+        width, height = image.size
+        crop_size = height
+        params = get_params(self.opt, size=(width, height),
+                            crop_size=crop_size)
+        if self.isval:
+            image = self.input_transform(image)
+        else:
+            transforms4train = get_transform(self.opt,
+                                             (width, height),
+                                             params)
+            image = transforms4train(image)
         flowpath = os.path.join(self.opt.train_data_path[0], self.dataset, id+"_motion.pth")
         flow = load_compressed_tensor(flowpath)
         gt_motion = flow.clone()
         height, width = flow.shape[2], flow.shape[3]
-
-        # mask_rock
-        labelpath = os.path.join(self.opt.rock_label_data_path, id+".png.json")
-        mask_rock = np.zeros((flow.shape[2], flow.shape[3],1))
-        if os.path.exists(labelpath):
-            with open(labelpath, 'r') as load_f:
-                label = json.load(load_f)
-            width = label["width"]
-            height = label["height"]
-            label_results = label['step_1']['result']
-            for i, label_result in enumerate(label_results):
-                label_pointlist = label_result['pointList']
-                polygon = []
-                for point in label_pointlist:
-                    polygon.append((point['x'], point['y']))
-                label1mask = Image.new('L', (width, height), 0)
-                ImageDraw.Draw(label1mask).polygon(polygon, outline=1, fill=1)
-                label1mask = np.array(label1mask)  # (1080, 1920)
-                label1mask = np.expand_dims(label1mask, 2)
-                mask_rock += label1mask
-            mask_rock[mask_rock>1.0] = 1.0
-            mask_rock = torch.FloatTensor(mask_rock).permute(2,0,1).unsqueeze(0)
-        else:
-            mask_rock = torch.zeros((flow.shape[0], 1, flow.shape[2], flow.shape[3]))
-
-
         if self.isval:
             flow_scale = [self.opt.W/flow.shape[3], self.opt.W/flow.shape[2]]
         else:
@@ -118,17 +98,17 @@ class Liquid(data.Dataset):
             if params['flip']:
                 flow = torch.flip(flow,[3])
                 flow[:, 0, :, :] *= -1
-        flow = flow * torch.FloatTensor(flow_scale).view(1,2,1,1)
-        flow = F.interpolate(flow, (self.opt.W, self.opt.W), mode='bilinear')
-        flow = flow.view(2, -1)  # (2, WW)
 
+        flow = flow * torch.FloatTensor(flow_scale).view(1,2,1,1)
+        flow = F.interpolate(flow, (self.opt.W, self.opt.W), mode='bilinear',align_corners=False)
+        flow = flow.view(2, -1)  # (2, WW)
 
         # Hint
         if "use_online_hint" and self.opt.use_online_hint and (not self.isval):
             pass
         else:
             hintpath = os.path.join(self.opt.train_data_path[0], self.dataset, id+"_sparse_motion.flo")
-            hint = torch.FloatTensor(read_flo(hintpath))
+            hint = torch.FloatTensor(read_flo(hintpath))  # (1024, 1920, 2)
             hint = hint.permute((2, 0, 1)).contiguous().unsqueeze(0)
 
         if self.isval:
@@ -141,15 +121,17 @@ class Liquid(data.Dataset):
                 ys = torch.linspace(0, height - 1, height)
                 xs = xs.view(1, 1, width).repeat(1, height, 1)
                 ys = ys.view(1, height, 1).repeat(1, 1, width)
-                xys = torch.cat((xs, ys), 1).view(2, -1)
+                xys = torch.cat((xs, ys), 1).view(2, -1)  # (2,WW)
                 gt_motion_speed = (gt_motion[:, 0:1, ...] ** 2 + gt_motion[:, 1:2, ...] ** 2).sqrt().view(bs, 1, height,
                                                                                                           width)
+                # big_motion_alpha = (gt_motion_speed > gt_motion_speed.mean([1, 2, 3], True) * 0.1 -1e-8).float() 0.2161635
                 big_motion_alpha = (gt_motion_speed > 0.2161635).float()
                 if int(big_motion_alpha.sum().long()) < 10:
                     dense_motion = torch.zeros(gt_motion.shape)
                 else:
-                    max_hint = int(1+self.rng.randint(10))
+                    max_hint = int(1+self.rng.randint(5))
                     estimator = KMeans(n_clusters=max_hint)
+                    # index = torch.randint(0, int(big_motion_alpha.sum()), (max_hint,))
                     hint_y = torch.zeros((max_hint,))
                     hint_x = torch.zeros((max_hint,))
                     big_motion_xys = xys[:, torch.where(big_motion_alpha.view(1, 1, height * width))[2]]  # 2, M
@@ -164,7 +146,7 @@ class Liquid(data.Dataset):
                     dense_motion = torch.zeros(gt_motion.shape).view(1, 2, -1)
                     dense_motion_norm = torch.zeros(gt_motion.shape).view(1, 2, -1)
 
-                    sigma = self.rng.randint(height // (max_hint*3), height // max_hint)
+                    sigma = self.rng.randint(height // (max_hint*2), height // (max_hint/2))
                     hint_y = hint_y.long()
                     hint_x = hint_x.long()
                     for i_hint in range(max_hint):
@@ -193,56 +175,13 @@ class Liquid(data.Dataset):
         hint = F.interpolate(hint, (self.opt.W, self.opt.W), mode='bilinear',align_corners=False)
         hint = hint.view(2, -1)  # (2, WW)
 
-        if self.opt.use_gt_mean_img or self.opt.MVloss > 0.0:
-            mean_video_path = os.path.join(self.opt.train_data_path[0],"avr_image", id+".png")
-            mean_video = Image.open(mean_video_path)
-            if self.isval:
-                mean_video = self.input_transform(mean_video)
-            else:
-                transforms4train = get_transform(self.opt,
-                                                 (self.W, self.H),
-                                                 params)
-                mean_video = transforms4train(mean_video)
 
-
-        if not self.isval:
-            if 'crop' in self.opt.resize_or_crop and 'resize' in self.opt.resize_or_crop:
-                W = params['crop_size']
-                crop_pos = params['crop_pos']
-                mask_rock = mask_rock[:, :, crop_pos[1]:crop_pos[1] + W, crop_pos[0]:crop_pos[0] + W]
-            if params['flip']:
-                mask_rock = torch.flip(mask_rock,[3])
-        mask_rock = F.interpolate(mask_rock, (self.opt.W, self.opt.W), mode='nearest')
-        mask_rock = mask_rock[0]
-
-
-        for i in range(0, self.num_views):
-            if i == 0:
-                t_index = start_index
-            elif i == 1:
-                t_index = middle_index
-            else:
-                t_index = end_index
-            image = torch.FloatTensor(video_reader[t_index][0]).permute(2,0,1)/255.0
-            image = transforms.ToPILImage()(image)
-            if self.isval:
-                image = self.input_transform(image)
-            else:
-                transforms4train = get_transform(self.opt,
-                                                 (self.W,self.H),
-                                                 params)
-                image = transforms4train(image)
-
-            rgbs += [image]
+        rgbs += [image]
         batch = {"images": rgbs,
                 "motions":flow,
-                "index": [start_index, middle_index,end_index],
+                "hints":hint,
                  "isval": self.isval,
-                 "hints":hint,
-                 "mask_rock": mask_rock,
         }
-        if self.opt.use_gt_mean_img or self.opt.MVloss > 0.0:
-            batch["mean_video"] = [mean_video]
         return batch
 
     def totrain(self, epoch):
@@ -274,3 +213,80 @@ class Liquid(data.Dataset):
 
         self.rng = np.random.RandomState(epoch)
 
+
+
+if __name__=='__main__':
+    import sys
+    import os
+    rootdir = ""
+    name = "00980_00000"
+    names = sorted([x for x in os.listdir(rootdir) if "_motion.pth" in x and "sparse_motion" not in x
+                     ])
+    
+    print(names)
+    np.random.seed(5)
+
+    for i_name, name in enumerate(names):
+        flow_file = os.path.join(rootdir, name)
+        print("Processing %s."%name)
+        out_file =  os.path.join(rootdir, name[:-11]+"_sparse_motion.flo")
+        flow = load_compressed_tensor(flow_file)
+        print("Mean flow : %.2f" % flow.abs().mean())
+        speed = 1
+        bs = 1
+        height, width = flow.shape[2],flow.shape[3]
+
+        xs = torch.linspace(0, width - 1, width).cuda()
+        ys = torch.linspace(0, height - 1, height).cuda()
+        xs = xs.view(1, 1, width).repeat(1, height, 1)
+        ys = ys.view(1, height, 1).repeat(1, 1, width)
+        xys = torch.cat((xs, ys), 1).view(2, -1)  # (2,WW)
+
+        gt_motion = flow.cuda().view(1,2,height,width)
+        gt_motion_speed = (gt_motion[:, 0:1, ...] ** 2 + gt_motion[:, 1:2, ...] ** 2).sqrt().view(bs, 1, height, width)
+        big_motion_alpha = (gt_motion_speed > 0.2161635).float()
+        if int(big_motion_alpha.sum().long()) < 5:
+            dense_motion = torch.zeros(gt_motion.shape).cuda().view(1, 2, -1)
+            continue
+        else:
+            max_hint = 5
+            estimator = KMeans(n_clusters=max_hint)
+            #index = torch.randint(0, int(big_motion_alpha.sum()), (max_hint,))
+            hint_y = torch.zeros((max_hint,))
+            hint_x = torch.zeros((max_hint,))
+            big_motion_xys = xys[:,torch.where(big_motion_alpha.view(1,1,height*width))[2]] # 2, M
+            X = big_motion_xys.permute(1,0).cpu().detach().numpy()
+            estimator.fit(X)
+            labels = estimator.labels_
+            for i in range(max_hint):
+                selected_xy = X[labels==i].mean(0)
+                hint_y[i] = int(selected_xy[1])
+                hint_x[i] = int(selected_xy[0])
+
+
+            dense_motion = torch.zeros(gt_motion.shape).cuda().view(1, 2, -1)
+            dense_motion_norm = torch.zeros(gt_motion.shape).cuda().view(1, 2, -1)
+
+            sigma = height//5
+            hint_y = hint_y.long()
+            hint_x = hint_x.long()
+            for i_hint in range(max_hint):
+                dist = ((xys - xys.view(2, height, width)[:, hint_y[i_hint], hint_x[i_hint]].unsqueeze(
+                    1)) ** 2).sum(0, True).sqrt()  # 1,W*W
+                weight = (-(dist / sigma) ** 2).exp().unsqueeze(0)
+                dense_motion += weight * gt_motion[:, :, hint_y[i_hint], hint_x[i_hint], ].unsqueeze(2)
+                dense_motion_norm += weight
+                #torchvision.utils.save_image(weight.view(1, 1, 256, 256), "dist_Weight.png")
+            dense_motion_norm[dense_motion_norm == 0.0] = 1.0  # = torch.clamp(dense_motion_norm,min=1e-8)
+            dense_motion = dense_motion / dense_motion_norm
+            dense_motion = dense_motion.view(1, 2, height, width) * big_motion_alpha
+        writeFlow(out_file, dense_motion[0].permute(1, 2, 0).cpu().detach().numpy())
+
+        img8 = flow2img(gt_motion[0].permute(1, 2, 0).cpu().detach().numpy())
+        img8 = torch.FloatTensor(img8).permute(2, 0, 1).unsqueeze(0)
+        torchvision.utils.save_image(img8 / 255, os.path.join(out_file.replace("_sparse_motion.flo","_motion.png")))
+
+
+        img8 = flow2img(dense_motion[0].permute(1, 2, 0).cpu().detach().numpy())
+        img8 = torch.FloatTensor(img8).permute(2, 0, 1).unsqueeze(0)
+        torchvision.utils.save_image(img8 / 255, os.path.join(out_file.replace("_sparse_motion.flo","_sparse_motion.png")))

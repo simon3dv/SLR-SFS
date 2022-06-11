@@ -9,6 +9,7 @@ import torch
 import av
 import lz4framed
 import pickle
+import random
 class AverageMeter(object):
     """Computes and stores the average and current value"""
 
@@ -258,3 +259,87 @@ def read_flo(strFile):
     intHeight = np.frombuffer(buffer=strFlow, dtype=np.int32, count=1, offset=8)[0]
 
     return np.frombuffer(buffer=strFlow, dtype=np.float32, count=intHeight * intWidth * 2, offset=12).reshape([ intHeight, intWidth, 2 ])
+
+
+def get_params(opt, size=(1920,1024), crop_size=1024):
+    w, h = size
+    x = random.randint(0, np.maximum(0, w - crop_size))
+    y = random.randint(0, np.maximum(0, h - crop_size))
+
+    flip = random.random() > 0.5
+    if opt.no_flip:
+        flip = False
+    colorjitter = random.random() > 0.5
+    if "use_color_jitter" in opt and opt.use_color_jitter:
+        colorjitter = random.random() > 0.5
+    else:
+        colorjitter = False
+    colorjitter_params={}
+    colorjitter_params['brightness'] = (torch.rand(1) * 0.2 + 1.0).numpy()[0]
+    colorjitter_params['contrast'] = (torch.rand(1) * 0.2 + 1.0).numpy()[0]
+    colorjitter_params['saturation'] = (torch.rand(1) * 0.2 + 1.0).numpy()[0]
+    colorjitter_params['hue'] = (torch.rand(1) * 0.05).numpy()[0]
+        #brightness=0.2, contrast=0.2, saturation=0.2, hue=0.05
+
+    return {'crop_pos': (x, y), 'crop_size':crop_size, 'flip': flip, 'colorjitter':colorjitter, 'colorjitter_params':colorjitter_params}
+
+
+def __scale_width(img, target_width, method=Image.BICUBIC):
+    ow, oh = img.size
+    if (ow == target_width):
+        return img
+    w = target_width
+    h = int(target_width * oh / ow)
+    return img.resize((w, h), method)
+
+def __crop(img, pos, size):
+    ow, oh = img.size
+    x1, y1 = pos
+    tw = th = size
+    if (ow > tw or oh > th):
+        return img.crop((x1, y1, x1 + tw, y1 + th))
+    return img
+
+def __flip(img, flip):
+    if flip:
+        return img.transpose(Image.FLIP_LEFT_RIGHT)
+    return img
+
+def __colorjitter(img, colorjitter, colorjitter_params):
+    if colorjitter:
+        brightness = colorjitter_params['brightness']#0.2
+        contrast = colorjitter_params['contrast']#0.2
+        saturation = colorjitter_params['saturation']#0.2
+        hue = colorjitter_params['hue']#0.05
+        return transforms.ColorJitter(brightness=[brightness,brightness],
+                                      contrast=[contrast,contrast],
+                                      saturation=[saturation,saturation],
+                                      hue=[hue,hue])(img)
+    return img
+def get_transform(opt, size, params, method=Image.BICUBIC, normalize=True):
+    transform_list = []
+    if 'crop' in opt.resize_or_crop:
+        transform_list.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], params['crop_size'])))
+    if 'resize' in opt.resize_or_crop:
+        osize = [opt.W, opt.W]
+        transform_list.append(transforms.Resize(osize, method))
+    elif 'scale_width' in opt.resize_or_crop:
+        transform_list.append(transforms.Lambda(lambda img: __scale_width(img, opt.W, method)))
+    if not opt.no_flip:
+        transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
+    if "use_color_jitter" in opt and opt.use_color_jitter:
+        transform_list.append(transforms.Lambda(lambda img: __colorjitter(img, params['colorjitter'], params['colorjitter_params'])))
+    transform_list += [transforms.ToTensor()]
+
+    if normalize:
+        transform_list += [transforms.Normalize((0.5, 0.5, 0.5),
+                                                (0.5, 0.5, 0.5))]
+    return transforms.Compose(transform_list)
+
+
+class StaticCenterCrop(object):
+    def __init__(self, image_size, crop_size):
+        self.th, self.tw = crop_size
+        self.h, self.w = image_size
+    def __call__(self, img):
+        return img[(self.h-self.th)//2:(self.h+self.th)//2, (self.w-self.tw)//2:(self.w+self.tw)//2,:]

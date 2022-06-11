@@ -26,7 +26,8 @@ In this work, we tackle the problem of real-world fluid animation from a still i
 For more details of SLR-SFS, please refer to our paper and project page.
 
 ## News
- - [04/05/2022] Colab updated. Huggingface will be updated soon. Code, GUI of Motion Regressor from single image and our SFS will be released.
+ - [10/06/2022] Code, pretrained model of Motion Regressor from single image and sparse hint are updated.
+ - [04/05/2022] Colab updated. Huggingface will be updated soon. 
  - [26/04/2022] Technical report, code, CLAW testset released. 
  - [01/04/2022] Project page is created.
 
@@ -89,7 +90,7 @@ pip install lpips# for evaluation
 pip install av tensorboardX tensorboard # for training
 ```
 
-## Inference
+## Inference with GT Motion
 Download our pretrained model mentioned in Table 1,2 of the paper:
 
 | Model | LPIPS of CLAW(All;Fluid) | Description |
@@ -100,7 +101,7 @@ Download our pretrained model mentioned in Table 1,2 of the paper:
 | [Ours_v1](https://drive.google.com/file/d/1WzqWB-a85hZDhdos2CWezqT95IjJXzVN/view?usp=sharing) | 0.2040;0.1975  | Ours: 100epochs baseline2(stage 1) + 100epochs BG(stage 2) + (lower learning rate)50 epochs Ours(stage 3) |
 | [Ours_v1_ProjectPage](https://drive.google.com/file/d/1zmnoAkn3hphhY8hQr4xvs43juD_7M0Ow/view?usp=sharing) | 0.2060;0.1992 |  Selected with the best TotalLoss(Perctual Loss, MaskLoss mainly) of eulerian_data validation set, while the previous models are selected with the best Perceptual Loss. This pretrained model can be used to reproduce the results in our Project Page. Decomposition results is a little better than "Ours_v1" |
 
-1.For evaluation under gt motion:
+1.For evaluation under aligned gt motion:
 ```Ours CLAW testset
 # For our v1 model, 60 frames, gt motion(Table 1,2 in the paper)
 bash test_animating/CLAW/test_v1.sh
@@ -109,6 +110,7 @@ bash evaluation/eval_animating_CLAW.sh
 bash test_animating/CLAW/test_baseline2.sh
 bash evaluation/eval_animating_CLAW.sh
 ## You can also use sbatch script test_animating/test_sbatch_2.sh
+## For eulerian_data validation set, use the script in test_animating/eulerian_data
 ```
 
 
@@ -120,17 +122,32 @@ Results will be the same as:
 
 3.Run with smaller resolution by replacing 768 to 256 in test_animating/CLAW/test_v1_align.sh, etc.
 
+## Inference with Sparse Hint and Mask
+
+| Model | LPIPS of CLAW(All;Fluid) | Description |
+| --------- |:----------:|  :-----: |
+| [motion2](https://drive.google.com/file/d/1NpBKduT1RE6lpLOPGbm86t4ND_CZ0wQ8/view?usp=sharing) | - | Controllable-Motion: Ep200 |
+| [baseline2+motion2](https://drive.google.com/file/d/19gdrxM1bQGYc35aH6h9Si5v-h3LoIrO0/view?usp=sharing) | Ongoing | Modified Holynski(Baseline): 100epochs + Controllable-Motion: Ep200 |
+| [baseline2+motion2+fixedMotionFinetune](https://drive.google.com/file/d/1sNY4_58EMQKNiunBYsJiZ3jcPWAqGYBA/view?usp=sharing) | Ongoing | Modified Holynski(Baseline): 100epochs + Controllable-Motion: Ep200 + Fixed Motion and finetune fluid: Ep 50 |
+
+For evaluation under 5 sparse hint from and mask from gt motion:
+```Ours CLAW testset, baseline model
+bash test_animating/CLAW/test_baseline_motion.sh
+bash evaluation/eval_animating_CLAW.sh
+```
+
 
 ## Training
-To train baseline model under gt motion, run the following scripts
+1.To train baseline model under gt motion, run the following scripts
 ```
 # For baseline training
 bash train_animating_scripts/train_baseline1.sh
 # For baseline2 training (w/ pconv)
 bash train_animating_scripts/train_baseline2_pconv.sh
 ```
+Note: Please refer to ["Animating Pictures with Eulerian Motion Fields"](https://eulerian.cs.washington.edu/) for More information.  
 
-To train our SLR model under gt motion, run the following scripts
+2.To train our SLR model under gt motion, run the following scripts
 ```
 # Firstly, train Surface Fluid Layer for 100 epochs
 bash train_animating_scripts/train_baseline2_pconv.sh
@@ -141,14 +158,33 @@ bash train_alpha_finetuneBG_finetuneFluid_v1.sh
 (Notice: check tensorboard to see whether your groundtruth alpha is right)
 ```
 
+3.To train motion , run the following scripts
+```
+# For controllable motion training with motion GAN
+bash train_animating_scripts/train_motion_scripts/train_motion_EPE_MotionGAN.sh
+```
+Note: Please refer to ["Controllable Animation of Fluid Elements in Still Images"](https://controllable-cinemagraphs.github.io/) for More information.  
 
+4.To finetune baseline model , run the following scripts
+```
+# First, run the stage 1 to train baseline fluid
+bash train_animating_scripts/train_baseline2_pconv.sh
+# Second, run the stage 2 to train motion
+bash train_animating_scripts/train_motion_scripts/train_motion_EPE_MotionGAN.sh
+# Finally, fixed motion estimation and finetune fluid 
+bash train_animating_scripts/train_animating_fixedMotion_finetuneFluid_IGANonly.sh
+```
+
+You can use tensorboard to check the training in the logging directory. 
 
 ## ToDo list
 - [x] pretrained model and code of our reproduced Holynski's method(w/o motion estimation)
 - [x] pretrained model and code of SLR
-- [ ] CLAWv2 testset(Early June)
-- [ ] pretrained model and code of motion estimation from single image(Early June)
+- [x] pretrained model and code of motion estimation from single image
+- [ ] CLAWv2 testset(Middle June)
+- [ ] Simple UI for Motion Editing(Late June)
 - [ ] code of SFS(Late June)
+
 
 
 ## Citation

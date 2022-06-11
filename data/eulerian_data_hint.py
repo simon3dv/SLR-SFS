@@ -12,13 +12,9 @@ import time
 import sys
 import random
 import torch.nn.functional as F
-from PIL import Image, ImageDraw
-import json
-from utils.utils import VideoReader, load_compressed_tensor, read_flo, get_params
-from sklearn.cluster import KMeans
+from utils.utils import read_flo, load_compressed_tensor, VideoReader, get_params, get_transform
 PATH = os.getcwd()
 sys.path.append(os.path.join(PATH))
-
 
 class Liquid(data.Dataset):
     """
@@ -28,6 +24,7 @@ class Liquid(data.Dataset):
         self, dataset, opts=None, num_views=3, seed=0, vectorize=False
     ):
         # Now go through the dataset
+        # Raw Image Size
         self.opt=opts
         self.W = 1280
         self.H = 720
@@ -78,32 +75,6 @@ class Liquid(data.Dataset):
         flow = load_compressed_tensor(flowpath)
         gt_motion = flow.clone()
         height, width = flow.shape[2], flow.shape[3]
-
-        # mask_rock
-        labelpath = os.path.join(self.opt.rock_label_data_path, id+".png.json")
-        mask_rock = np.zeros((flow.shape[2], flow.shape[3],1))
-        if os.path.exists(labelpath):
-            with open(labelpath, 'r') as load_f:
-                label = json.load(load_f)
-            width = label["width"]
-            height = label["height"]
-            label_results = label['step_1']['result']
-            for i, label_result in enumerate(label_results):
-                label_pointlist = label_result['pointList']
-                polygon = []
-                for point in label_pointlist:
-                    polygon.append((point['x'], point['y']))
-                label1mask = Image.new('L', (width, height), 0)
-                ImageDraw.Draw(label1mask).polygon(polygon, outline=1, fill=1)
-                label1mask = np.array(label1mask)  # (1080, 1920)
-                label1mask = np.expand_dims(label1mask, 2)
-                mask_rock += label1mask
-            mask_rock[mask_rock>1.0] = 1.0
-            mask_rock = torch.FloatTensor(mask_rock).permute(2,0,1).unsqueeze(0)
-        else:
-            mask_rock = torch.zeros((flow.shape[0], 1, flow.shape[2], flow.shape[3]))
-
-
         if self.isval:
             flow_scale = [self.opt.W/flow.shape[3], self.opt.W/flow.shape[2]]
         else:
@@ -141,15 +112,17 @@ class Liquid(data.Dataset):
                 ys = torch.linspace(0, height - 1, height)
                 xs = xs.view(1, 1, width).repeat(1, height, 1)
                 ys = ys.view(1, height, 1).repeat(1, 1, width)
-                xys = torch.cat((xs, ys), 1).view(2, -1)
+                xys = torch.cat((xs, ys), 1).view(2, -1)  # (2,WW)
                 gt_motion_speed = (gt_motion[:, 0:1, ...] ** 2 + gt_motion[:, 1:2, ...] ** 2).sqrt().view(bs, 1, height,
                                                                                                           width)
+                # big_motion_alpha = (gt_motion_speed > gt_motion_speed.mean([1, 2, 3], True) * 0.1 -1e-8).float() 0.2161635
                 big_motion_alpha = (gt_motion_speed > 0.2161635).float()
                 if int(big_motion_alpha.sum().long()) < 10:
                     dense_motion = torch.zeros(gt_motion.shape)
                 else:
-                    max_hint = int(1+self.rng.randint(10))
+                    max_hint = int(1+self.rng.randint(5))
                     estimator = KMeans(n_clusters=max_hint)
+                    # index = torch.randint(0, int(big_motion_alpha.sum()), (max_hint,))
                     hint_y = torch.zeros((max_hint,))
                     hint_x = torch.zeros((max_hint,))
                     big_motion_xys = xys[:, torch.where(big_motion_alpha.view(1, 1, height * width))[2]]  # 2, M
@@ -164,7 +137,7 @@ class Liquid(data.Dataset):
                     dense_motion = torch.zeros(gt_motion.shape).view(1, 2, -1)
                     dense_motion_norm = torch.zeros(gt_motion.shape).view(1, 2, -1)
 
-                    sigma = self.rng.randint(height // (max_hint*3), height // max_hint)
+                    sigma = self.rng.randint(height // (max_hint*2), height // (max_hint/2))
                     hint_y = hint_y.long()
                     hint_x = hint_x.long()
                     for i_hint in range(max_hint):
@@ -173,7 +146,8 @@ class Liquid(data.Dataset):
                         weight = (-(dist / sigma) ** 2).exp().unsqueeze(0)
                         dense_motion += weight * gt_motion[:, :, hint_y[i_hint], hint_x[i_hint], ].unsqueeze(2)
                         dense_motion_norm += weight
-                    dense_motion_norm[dense_motion_norm == 0.0] = 1.0
+                        # torchvision.utils.save_image(weight.view(1, 1, 256, 256), "dist_Weight.png")
+                    dense_motion_norm[dense_motion_norm == 0.0] = 1.0  # = torch.clamp(dense_motion_norm,min=1e-8)
                     dense_motion = dense_motion / dense_motion_norm
                     dense_motion = dense_motion.view(1, 2, height, width) * big_motion_alpha
                 hint = dense_motion
@@ -203,19 +177,6 @@ class Liquid(data.Dataset):
                                                  (self.W, self.H),
                                                  params)
                 mean_video = transforms4train(mean_video)
-
-
-        if not self.isval:
-            if 'crop' in self.opt.resize_or_crop and 'resize' in self.opt.resize_or_crop:
-                W = params['crop_size']
-                crop_pos = params['crop_pos']
-                mask_rock = mask_rock[:, :, crop_pos[1]:crop_pos[1] + W, crop_pos[0]:crop_pos[0] + W]
-            if params['flip']:
-                mask_rock = torch.flip(mask_rock,[3])
-        mask_rock = F.interpolate(mask_rock, (self.opt.W, self.opt.W), mode='nearest')
-        mask_rock = mask_rock[0]
-
-
         for i in range(0, self.num_views):
             if i == 0:
                 t_index = start_index
@@ -239,7 +200,6 @@ class Liquid(data.Dataset):
                 "index": [start_index, middle_index,end_index],
                  "isval": self.isval,
                  "hints":hint,
-                 "mask_rock": mask_rock,
         }
         if self.opt.use_gt_mean_img or self.opt.MVloss > 0.0:
             batch["mean_video"] = [mean_video]
@@ -273,4 +233,5 @@ class Liquid(data.Dataset):
             ) if 'mp4' in x]))
 
         self.rng = np.random.RandomState(epoch)
+
 

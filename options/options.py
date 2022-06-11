@@ -9,10 +9,6 @@ def get_model(opt):
         from models.animating_softmax_splating import AnimatingSoftmaxSplating
 
         model = AnimatingSoftmaxSplating(opt)
-    elif opt.model_type == "softmax_splating_Zmax":
-        from models.animating_softmax_splating_Zmax import AnimatingSoftmaxSplating
-
-        model = AnimatingSoftmaxSplating(opt)
     ### CLAW ###
     elif opt.model_type == "bg":
         from models.animating_softmax_splating_2layers_alpha_seperate import BackgroundNetwork
@@ -26,10 +22,6 @@ def get_model(opt):
         from models.animating_softmax_splating_2layers_alpha_seperate import AnimatingSoftmaxSplatingJoint
 
         model = AnimatingSoftmaxSplatingJoint(opt)
-    elif opt.model_type == "softmax_splating_2layers_alpha":
-        from models.animating_softmax_splating_2layers_alpha import AnimatingSoftmaxSplatingAlphaEncoder
-
-        model = AnimatingSoftmaxSplatingAlphaEncoder(opt)
     ### Motion ###
     elif opt.model_type == "unet_motion":
         from models.unet_motion import UnetMotion
@@ -39,10 +31,6 @@ def get_model(opt):
         from models.unet_motion import SPADEUnetMaskMotion
 
         model = SPADEUnetMaskMotion(opt)
-    elif opt.model_type == "softmax_splating_joint":
-        from models.animating_softmax_splating_joint import AnimatingSoftmaxSplating
-
-        model = AnimatingSoftmaxSplating(opt)
     return model
 
 def get_dataset(opt):
@@ -117,18 +105,16 @@ def get_dataset(opt):
 
         return Liquid
 
-    elif opt.dataset == "eulerian_data_balanced1_align_mask":
+
+    elif opt.dataset == "eulerian_data_motion_hint":
         opt.train_data_path = (
             "data/eulerian_data/",
-            "data/shallow_water_all/",
+            "data/files/eulerian_data"
         )
-        opt.rock_label_data_path = "data/eulerian_data/fluid_region_rock_labels/all"
-        opt.align_data_path = "data/eulerian_data/align_max_frame_005_bin_max150.json"
-        from data.eulerian_data_balanced1_align_mask import Liquid
+        from data.eulerian_data_motion_hint import Liquid
 
         return Liquid
 
     print("No matching dataset {}, use HabitatImageGenerator instead.".format(opt.dataset))
-    from data.habitat_data import HabitatImageGenerator as Dataset
 
     return Dataset

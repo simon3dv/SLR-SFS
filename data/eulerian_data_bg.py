@@ -12,76 +12,9 @@ import time
 import sys
 import random
 import torch.nn.functional as F
-from utils.utils import VideoReader, load_compressed_tensor
+from utils.utils import VideoReader, load_compressed_tensor, get_params
 PATH = os.getcwd()
 sys.path.append(os.path.join(PATH))
-
-class StaticCenterCrop(object):
-    def __init__(self, image_size, crop_size):
-        self.th, self.tw = crop_size
-        self.h, self.w = image_size
-    def __call__(self, img):
-        return img[(self.h-self.th)//2:(self.h+self.th)//2, (self.w-self.tw)//2:(self.w+self.tw)//2,:]
-
-
-def get_params(opt, size=(1920,1024), crop_size=1024):
-    w, h = size
-    new_h = h
-    new_w = w
-    if opt.resize_or_crop == 'resize_and_crop':
-        new_h = new_w = 1024
-    elif opt.resize_or_crop == 'scale_width_and_crop':
-        new_w = 1024
-        new_h = 1024 * h // w
-
-    x = random.randint(0, np.maximum(0, new_w - crop_size))
-    y = random.randint(0, np.maximum(0, new_h - crop_size))
-
-    flip = random.random() > 0.5
-    if opt.no_flip:
-        flip = False
-    return {'crop_pos': (x, y), 'crop_size':crop_size, 'flip': flip}
-
-
-def __scale_width(img, target_width, method=Image.BICUBIC):
-    ow, oh = img.size
-    if (ow == target_width):
-        return img
-    w = target_width
-    h = int(target_width * oh / ow)
-    return img.resize((w, h), method)
-
-def __crop(img, pos, size):
-    ow, oh = img.size
-    x1, y1 = pos
-    tw = th = size
-    if (ow > tw or oh > th):
-        return img.crop((x1, y1, x1 + tw, y1 + th))
-    return img
-
-def __flip(img, flip):
-    if flip:
-        return img.transpose(Image.FLIP_LEFT_RIGHT)
-    return img
-
-def get_transform(opt, size, params, method=Image.BICUBIC, normalize=True):
-    transform_list = []
-    if 'crop' in opt.resize_or_crop:
-        transform_list.append(transforms.Lambda(lambda img: __crop(img, params['crop_pos'], params['crop_size'])))
-    if 'resize' in opt.resize_or_crop:
-        osize = [opt.W, opt.W]
-        transform_list.append(transforms.Resize(osize, method))
-    elif 'scale_width' in opt.resize_or_crop:
-        transform_list.append(transforms.Lambda(lambda img: __scale_width(img, opt.W, method)))
-    if not opt.no_flip:
-        transform_list.append(transforms.Lambda(lambda img: __flip(img, params['flip'])))
-
-    transform_list += [transforms.ToTensor()]
-
-    if normalize:
-        transform_list += [transforms.Normalize((0.5, 0.5, 0.5),
-                                                (0.5, 0.5, 0.5))]
-    return transforms.Compose(transform_list)
 
 class Liquid(data.Dataset):
     """

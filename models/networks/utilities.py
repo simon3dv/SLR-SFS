@@ -123,6 +123,10 @@ def get_alpha_decoder(opt):
     else:
         opt_alpha.out_channel = 2
     opt_alpha.addtional_decoder_input = 1
+    if "decouple" in opt_alpha.refine_model_type:
+        opt_alpha.addtional_decoder_input -= opt.ngf
+    elif "image" in opt_alpha.refine_model_type:
+        opt_alpha.addtional_decoder_input -= opt.ngf - 3
     opt_alpha.addtional_decoder_output = -2
     decoder = ResNetDecoderPconv2(opt_alpha, use_tanh=False)
 
