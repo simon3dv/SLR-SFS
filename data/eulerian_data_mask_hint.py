@@ -14,7 +14,7 @@ import random
 import torch.nn.functional as F
 from PIL import Image, ImageDraw
 import json
-from utils.utils import VideoReader, load_compressed_tensor, read_flo, get_params
+from utils.utils import VideoReader, load_compressed_tensor, read_flo, get_params, get_transform
 from sklearn.cluster import KMeans
 PATH = os.getcwd()
 sys.path.append(os.path.join(PATH))

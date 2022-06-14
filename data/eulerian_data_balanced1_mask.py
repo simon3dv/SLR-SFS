@@ -14,7 +14,7 @@ import random
 import torch.nn.functional as F
 from PIL import Image, ImageDraw
 import json
-from utils.utils import VideoReader, load_compressed_tensor, get_params
+from utils.utils import VideoReader, load_compressed_tensor, get_params, get_transform
 PATH = os.getcwd()
 sys.path.append(os.path.join(PATH))
 
