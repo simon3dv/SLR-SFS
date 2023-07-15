@@ -1,10 +1,10 @@
 # SLR-SFS
 
-## Simulating Fluids in Real-World Still Images 
+## [ICCV2023]Simulating Fluids in Real-World Still Images 
 
 Code release for the paper **Simulating Fluids in Real-World Still Images**
 
-**Authors**: [Siming Fan](https://simon3dv.github.io/), [Jingtan Piao](#), [Chen Qian](https://scholar.google.com/citations?user=AerkT0YAAAAJ&hl=en), [Kwan-Yee Lin](https://kwanyeelin.github.io/), [Hongsheng Li](http://www.ee.cuhk.edu.hk/~hsli/).
+**Authors**: [Siming Fan](https://simon3dv.github.io/), [Jingtan Piao](https://scholar.google.com/citations?hl=zh-CN&user=4jvU6FIAAAAJ&view_op=list_works&sortby=pubdate), [Chen Qian](https://scholar.google.com/citations?user=AerkT0YAAAAJ&hl=en), [Kwan-Yee Lin](https://kwanyeelin.github.io/), [Hongsheng Li](http://www.ee.cuhk.edu.hk/~hsli/).
 
 [[Paper](http://arxiv.org/abs/2204.11335)] [[Project Page](https://slr-sfs.github.io/)] [[Demo Video](https://www.youtube.com/watch?v=Aatrl16t-V8)]
 
@@ -26,6 +26,7 @@ In this work, we tackle the problem of real-world fluid animation from a still i
 For more details of SLR-SFS, please refer to our paper and project page.
 
 ## News
+ - [14/07/2023] Our paper has been accepted by ICCV 2023!
  - [10/06/2022] Code, pretrained model of Motion Regressor from single image and sparse hint are updated.
  - [04/05/2022] Colab updated. Huggingface will be updated soon. 
  - [26/04/2022] Technical report, code, CLAW testset released. 
@@ -181,9 +182,9 @@ You can use tensorboard to check the training in the logging directory.
 - [x] pretrained model and code of our reproduced Holynski's method(w/o motion estimation)
 - [x] pretrained model and code of SLR
 - [x] pretrained model and code of motion estimation from single image
-- [ ] CLAWv2 testset(Middle June)
-- [ ] Simple UI for Motion Editing(Late June)
-- [ ] code of SFS(Late June)
+- [ ] CLAWv2 testset
+- [ ] Simple UI for Motion Editing
+- [ ] code of SFS
 
 
 
