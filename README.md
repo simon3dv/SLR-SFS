@@ -1,6 +1,6 @@
 # SLR-SFS
 
-## [ICCV2023]Simulating Fluids in Real-World Still Images 
+## [ICCV2023 Oral]Simulating Fluids in Real-World Still Images 
 
 Code release for the paper **Simulating Fluids in Real-World Still Images**
 
