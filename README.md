@@ -4,6 +4,10 @@
 
 Code release for the paper **Simulating Fluids in Real-World Still Images**
 
+Note: I'm sorry that the plan for releasing rest of the codes(CLAWv2 testset, Inference without hint , UI for hint editing and SFS) is suspend.
+**For people want to animate your own single image**: Currently the sparse hints and masks in our dataset are sampled from ground-truth motion, and ground truth motion is inferenced from ground-truth video using flownet2. If you want to animate your own single image data, you can refer to https://github.com/simon3dv/SLR-SFS/issues/3#issuecomment-1255092072_: First use LABELME to generate mask, and then edit one to five pixels of motion speed and direction in code. 
+If you want to animate without any hint, you have to train your own motion model.(We tried but the motion result is worse than the one using hints)
+
 **Authors**: [Siming Fan](https://simon3dv.github.io/), [Jingtan Piao](https://scholar.google.com/citations?hl=zh-CN&user=4jvU6FIAAAAJ&view_op=list_works&sortby=pubdate), [Chen Qian](https://scholar.google.com/citations?user=AerkT0YAAAAJ&hl=en), [Kwan-Yee Lin](https://kwanyeelin.github.io/), [Hongsheng Li](http://www.ee.cuhk.edu.hk/~hsli/).
 
 [[Paper](http://arxiv.org/abs/2204.11335)] [[Project Page](https://slr-sfs.github.io/)] [[Demo Video](https://www.youtube.com/watch?v=Aatrl16t-V8)]
@@ -178,7 +182,7 @@ bash train_animating_scripts/train_animating_fixedMotion_finetuneFluid_IGANonly.
 
 You can use tensorboard to check the training in the logging directory. 
 
-## ToDo list
+## ToDo list(suspend)
 - [x] pretrained model and code of our reproduced Holynski's method(w/o motion estimation)
 - [x] pretrained model and code of SLR
 - [x] pretrained model and code of motion estimation from single image
